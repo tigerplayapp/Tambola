@@ -1,0 +1,93 @@
+// Backend (Node.js and Express)
+const express = require('express');
+const http = require('http');
+const socketIO = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
+
+let countdownValue = 0;
+let tickets = [];
+
+io.on('connection', (socket) => {
+  // Handle client connections
+  console.log('Client connected');
+
+  // Send initial state to the client
+  socket.emit('initialState', { countdownValue, tickets });
+
+  // Handle countdown updates from clients
+  socket.on('updateCountdown', (newCountdownValue) => {
+    countdownValue = newCountdownValue;
+    // Broadcast the updated countdown value to all connected clients
+    io.emit('countdownUpdated', countdownValue);
+  });
+
+  // Handle ticket generation from clients
+  socket.on('generateTickets', () => {
+    // Generate tickets here and update the tickets array
+    tickets = generateTickets();
+    // Broadcast the updated tickets to all connected clients
+    io.emit('ticketsGenerated', tickets);
+  });
+});
+
+// Your ticket generation logic
+function generateTickets() {
+  // Implement your ticket generation logic here
+  // ...
+}
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Frontend (JavaScript)
+// Assuming you're using Socket.IO on the frontend
+
+// Connect to the Socket.IO server
+const socket = io();
+
+// Handle initial state
+socket.on('initialState', ({ countdownValue, tickets }) => {
+  // Update the UI with the initial state
+  updateCountdownUI(countdownValue);
+  displayTicketsUI(tickets);
+});
+
+// Handle countdown updates
+socket.on('countdownUpdated', (newCountdownValue) => {
+  // Update the UI with the new countdown value
+  updateCountdownUI(newCountdownValue);
+});
+
+// Handle ticket updates
+socket.on('ticketsGenerated', (newTickets) => {
+  // Update the UI with the new tickets
+  displayTicketsUI(newTickets);
+});
+
+// Functions to update the UI
+function updateCountdownUI(value) {
+  // Update the countdown timer UI
+  // ...
+}
+
+function displayTicketsUI(tickets) {
+  // Update the ticket display UI
+  // ...
+}
+
+// Functions to emit actions to the server
+function setCountdown(value) {
+  // Emit the updateCountdown action to the server
+  socket.emit('updateCountdown', value);
+}
+
+function generateTickets() {
+  // Emit the generateTickets action to the server
+  socket.emit('generateTickets');
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>admin</title>
+    <link rel="stylesheet" href="admin_style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="admin_script.js" defer></script>
+    <script src="main.js" defer></script>
+</head>
+
+<body>
+    <div class="admin-ticket-container">
+        <h1>Welcome to admin dashboard</h1>
+
+        <h2>Set time</h2>
+        <div id="loginOverlay" class="overlay">
+            <!-- The popup box -->
+            <div class="popup">
+                <span class="close" onclick="closeLoginPopup()">&times;</span>
+                <h2>Login</h2>
+                <form id="login-form">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+    
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+    
+                    <input type="button" value="Login" onclick="performLogin()">
+                </form>
+            </div>
+        </div>
+        <div class="game-date">
+
+            <button id="one-hour-countdown-button" onclick="startCountdown(1)">1 hour</button>
+            <button id="two-hour-countdown-button" onclick="startCountdown(2)">2 hours</button>
+            <button id="four-hour-countdown-button" onclick="startCountdown(4)">4 hours</button>
+            <button id="eight-hour-countdown-button" onclick="startCountdown(8)">8 hours</button>
+            <button id="twelve-hour-countdown-button" onclick="startCountdown(12)">12 hours</button>
+
+            <button id="startNowButton" onclick="startNow()">Start Now</button>
+
+
+        </div>
+
+        <h2>Generate Tickets</h2>
+        <div class="tickets-div">
+
+            <input id="generate-one-ticket-button" type="button" value="Generate 1 Ticket" onclick="generateTicket(1)">
+
+
+            <!-- <input id="generate-five-ticket-button" type="button" value="Generate 5 Tickets" onclick="generateMultipleTicket(5)"
+                style="margin-top: 20px; font-size: 15px; padding: 5px 20px;"> -->
+
+            <button onclick="deleteAllTickets()">Delete all tickets</button>
+        </div>
+
+
+    </div>
+</body>
+
+</html>
