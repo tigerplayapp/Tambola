@@ -164,14 +164,21 @@ async function saveTicketToDatabase(generatedTicket) {
 
 
 
+let loadedTicketsCache = [];
+
 async function loadTicketsFromDatabase() {
     const client = new Client(pgConfig);
 
     try {
         await client.connect();
+
         const query = 'SELECT DISTINCT ON (ticket_number) * FROM tickets ORDER BY ticket_number, RANDOM()';
         const result = await client.query(query);
-        return result.rows;
+        const uniqueTickets = result.rows.filter(ticket => !loadedTicketsCache.includes(ticket.ticket_number));
+
+        loadedTicketsCache = [...loadedTicketsCache, ...uniqueTickets.map(ticket => ticket.ticket_number)];
+
+        return uniqueTickets;
     } catch (error) {
         console.error('Error loading tickets from the database:', error.message);
         throw error;
