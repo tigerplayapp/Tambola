@@ -1,4 +1,4 @@
-const socket = io('https://tigerplayapp.onrender.com/Number-Generator/');
+const socket = io('https://tigerplayapp.onrender.com/');
 
 function fetchVisitedNumbers() {
    
