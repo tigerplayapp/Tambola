@@ -169,12 +169,12 @@ async function loadTicketsFromDatabase() {
 
     try {
         await client.connect();
-        const query = 'SELECT * FROM tickets';
+        const query = 'SELECT DISTINCT ON (ticket_number) * FROM tickets ORDER BY ticket_number, RANDOM()';
         const result = await client.query(query);
         return result.rows;
     } catch (error) {
         console.error('Error loading tickets from the database:', error.message);
-        throw error; // Propagate the error to the caller
+        throw error;
     } finally {
         await client.end();
     }
