@@ -220,7 +220,7 @@ function updateCountdown(countdownValue) {
                     console.error('Error clearing visited numbers:', error);
                 });
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
-            window.open('Number-Generator/index.html', '_blank');
+            window.location.href = 'Number-Generator/index.html'
             countdownDisplay.textContent = 0;
         } else {
             setTimeout(() => {
