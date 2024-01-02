@@ -72,7 +72,7 @@ function removeLast() {
 
 btn.addEventListener('click', () => {
   
-    fetch('http://localhost:3000/clearVisitedNumbers', {
+    fetch('https://tigerplayapp.onrender.com/Number-Generator/clearVisitedNumbers', {
         method: 'POST',
     })
     .then(response => response.json())
@@ -90,7 +90,7 @@ btn.addEventListener('click', () => {
 
 // Call the function when the page loads
 window.onload = function () {
-    fetch('http://localhost:3000/getVisitedNumbers')
+    fetch('https://tigerplayapp.onrender.com/Number-Generator/getVisitedNumbers')
     .then(response => response.json())
     .then(data => {
         visitedNumbers = data.visitedNumbers || [];
