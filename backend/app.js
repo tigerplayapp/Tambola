@@ -29,10 +29,14 @@ client.connect()
 let tickets = [];
 let countdownInterval;
 let visitedNumbers = [];
+let userTicketCaches = {};
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('Client connected');
+
+    const userId = socket.id;
+    userTicketCaches[userId] = [];
     loadTicketsFromDatabase()
         .then((loadedTickets) => {
             socket.emit('ticketsGenerated', loadedTickets);
@@ -116,6 +120,10 @@ io.on('connection', (socket) => {
         io.emit('generatedTicket', newTicket);
     });
     
+    socket.on('disconnect', () => {
+        // Remove the user-specific cache on disconnect
+        delete userTicketCaches[userId];
+    });
     
     
 });
@@ -164,19 +172,27 @@ async function saveTicketToDatabase(generatedTicket) {
 
 
 
-let loadedTicketsCache = [];
-
-async function loadTicketsFromDatabase() {
+async function loadTicketsFromDatabase(userId) {
     const client = new Client(pgConfig);
 
     try {
         await client.connect();
 
-        const query = 'SELECT DISTINCT ON (ticket_number) * FROM tickets ORDER BY ticket_number, RANDOM()';
-        const result = await client.query(query);
-        const uniqueTickets = result.rows.filter(ticket => !loadedTicketsCache.includes(ticket.ticket_number));
+        const userCache = userTicketCaches[userId] || [];
 
-        loadedTicketsCache = [...loadedTicketsCache, ...uniqueTickets.map(ticket => ticket.ticket_number)];
+        // Create placeholders for parameters based on the number of items in userCache
+        const placeholders = userCache.map((_, index) => `$${index + 2}`).join(', ');
+
+        // Use the placeholders in the NOT IN condition
+        const query = `SELECT * FROM tickets WHERE ticket_number NOT IN (${placeholders || 'null'})`;
+        
+        // Combine the userCache and query parameters
+        const queryParams = userCache.map(ticketNumber => parseInt(ticketNumber));
+
+        const result = await client.query(query, queryParams);
+
+        const uniqueTickets = result.rows;
+        userTicketCaches[userId] = [...userCache, ...uniqueTickets.map(ticket => ticket.ticket_number)];
 
         return uniqueTickets;
     } catch (error) {
