@@ -1,6 +1,6 @@
 CREATE TABLE tickets (
     id SERIAL PRIMARY KEY,
-    ticket_number INTEGER,  -- Add this column if ticketNumber is not part of the ticket data
+    ticket_number INTEGER,
     row1_col1 INTEGER,
     row1_col2 INTEGER,
     row1_col3 INTEGER,
