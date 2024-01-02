@@ -111,18 +111,20 @@ io.on('connection', (socket) => {
 
     
 
- 
+    socket.on('generateTicket', () => {
+        const newTicket = generateAndStoreTicket();
+        io.emit('generatedTicket', newTicket);
+    });
     
     
     
 });
 
-function generateAndStoreTicket() {
-    // Your logic to generate a new ticket
-    const newTicket = generateTickets(); // Replace with your actual function
+async function generateAndStoreTicket() {
+    const newTicket = generateTickets(1)[0]; // Generate a single ticket
 
     // Your logic to store the new ticket in the database
-    saveTicketToDatabase(newTicket);
+    await saveTicketToDatabase(newTicket);
 
     return newTicket;
 }
@@ -133,19 +135,18 @@ async function saveTicketToDatabase(generatedTicket) {
     try {
         await client.connect();
 
+        // Generate a unique ticket number on the server side
+        const ticketNumberQuery = 'SELECT MAX(ticket_number) FROM tickets';
+        const result = await client.query(ticketNumberQuery);
+        const nextTicketNumber = result.rows[0].max || 0;
+        generatedTicket.ticket_number = nextTicketNumber + 1;
+
+        // Save the generated ticket to the database
+        const keys = Object.keys(generatedTicket).join(', ');
         const values = Object.values(generatedTicket).map(value => `'${value}'`).join(', ');
-
-        const query = `
-        INSERT INTO tickets (
-            ticket_number,
-            row1_col1, row1_col2, row1_col3, row1_col4, row1_col5, row1_col6, row1_col7, row1_col8, row1_col9,
-            row2_col1, row2_col2, row2_col3, row2_col4, row2_col5, row2_col6, row2_col7, row2_col8, row2_col9,
-            row3_col1, row3_col2, row3_col3, row3_col4, row3_col5, row3_col6, row3_col7, row3_col8, row3_col9
-        ) 
-        VALUES (${values}) RETURNING *`;  // Add RETURNING * to get the inserted row
-
-        const result = await client.query(query);
-        const insertedTicket = result.rows[0];
+        const query = `INSERT INTO tickets (${keys}) VALUES (${values}) RETURNING *`;
+        const insertionResult = await client.query(query);
+        const insertedTicket = insertionResult.rows[0];
 
         // Update the tickets array only after successful insertion
         tickets.push(insertedTicket);
@@ -159,6 +160,7 @@ async function saveTicketToDatabase(generatedTicket) {
         await client.end();
     }
 }
+
 
 
 

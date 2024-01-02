@@ -11,6 +11,11 @@ socket.on('tickets', (loadedTickets) => {
     ticket_number = latestTicketNumber + 1;
 
 });
+
+socket.on('generatedTicket', (generatedTicket) => {
+    console.log('Received generated ticket:', generatedTicket);
+    displayTicket([generatedTicket]);
+});
 var rows = [];
 var ticket_number = 1;
 
@@ -33,6 +38,7 @@ function getZeroOne() {
 }
 
 function generateTicket() {
+    socket.emit('generateTicket');
     var columnok = false;
     rows = [];
 
@@ -170,56 +176,6 @@ function displayTicket(tickets) {
     });
 }
 
-// socket.on('ticketsGenerated', (newTickets) => {
-//     // Update the UI with the new ticket data
-//     const ticketContainer = document.getElementById('ticket-container');
-
-//     // Clear existing tickets
-//     // ticketContainer.innerHTML = '';
-
-//     // Render new tickets in the container
-//     newTickets.forEach(ticket => {
-//         const ticketDiv = document.createElement('div');
-//         ticketContainer.appendChild(ticketDiv);
-//     });
-
-// });
-
-
-
-
-// function displayTicket() {
-//     var tblstr = "<table>";
-//     for (var r = 0; r < 3; r++) {
-//         tblstr += "<tr>";
-//         for (var c = 0; c < 9; c++) {
-//             if (rows[r] && rows[r][c] == 0) {
-//                 tblstr += "<td>&nbsp;</td>";
-//             } else {
-//                 tblstr += "<td>" + (rows[r] ? rows[r][c] : "") + "</td>";
-//             }
-//         }
-//         tblstr += "</tr>";
-//     }
-//     tblstr += "</table>";
-
-//     // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
-//     var buttonStr = "<button class='book-now'>Book Ticket " + ticketNumber + "</button>";
-
-//     // Append the new table and button to the existing content
-//     $("#tbl").append(tblstr + buttonStr);
-
-//     // Optionally, you can add margin between tables and buttons
-//     $("#tbl table:not(:last-child)").css("margin-bottom", "20px");
-//     $("#tbl button:not(:last-child)").css("margin-bottom", "20px");
-
-//     // Optionally, you can hide/show the table and buttons
-//     $("#tbl").show();
-
-//     // Increment ticket number for the next ticket
-//     ticketNumber++;
-// }
-
 const adminButton = document.getElementById('admin-button');
 adminButton.addEventListener('click', () => {
     window.open('/admin_index.html', '_blank');
@@ -293,12 +249,6 @@ socket.on('initialCountdown', (initialCountdownValue) => {
 
 
 socket.emit('getTickets');
-
-// const countdownBtn = document.getElementById('countdown-button');
-
-// countdownBtn.addEventListener('click', () => {
-//     socket.emit('startCountdown');
-// })
 
 
 function makeDeleteRequest() {
