@@ -28,8 +28,11 @@ client.connect()
 // Initialize countdown value and tickets array
 let tickets = [];
 let countdownInterval;
-let visitedNumbers = [];
+let generatedNumbers = [];
 let userTicketCaches = {};
+let lastRandomNumber = null;
+let MAX_NUMBERS = 90;
+
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -37,7 +40,13 @@ io.on('connection', (socket) => {
 
     const userId = socket.id;
     userTicketCaches[userId] = [];
-    loadTicketsFromDatabase()
+    if (lastRandomNumber !== null) {
+        socket.emit('newRandomNumber', lastRandomNumber);
+    }
+    socket.emit('existingGeneratedNumbers', generatedNumbers);
+
+
+     loadTicketsFromDatabase(userId)
         .then((loadedTickets) => {
             socket.emit('ticketsGenerated', loadedTickets);
             console.log('Tickets loaded from the database and emitted to the client:', loadedTickets);
@@ -45,7 +54,6 @@ io.on('connection', (socket) => {
         .catch((error) => {
             console.error('Error loading tickets from the database:', error.message);
         });
-
 
     // Emit countdown updates every second
     socket.on('startCountdown', (hours) => {
@@ -114,28 +122,56 @@ io.on('connection', (socket) => {
     });
 
     
-
     socket.on('generateTicket', () => {
         const newTicket = generateAndStoreTicket();
         io.emit('generatedTicket', newTicket);
     });
-    
+ 
     socket.on('disconnect', () => {
         // Remove the user-specific cache on disconnect
         delete userTicketCaches[userId];
     });
     
+
+    socket.on('generateRandomNumber', async () => {
+        let newRandomNumber;
+        do {
+            // Generate a new random number
+            newRandomNumber = Math.floor(Math.random() * MAX_NUMBERS + 1);
+        } while (generatedNumbers.includes(newRandomNumber));
+
+        // Add the new random number to the array
+        generatedNumbers.push(newRandomNumber);
+        await saveVisitedNumberToDatabase(newRandomNumber);
+
+        // Broadcast the new random number to all clients
+        io.emit('newRandomNumber', newRandomNumber);
+
+        if (generatedNumbers.length === 90) {
+            io.emit('generatedNumbersCount90');
+        }
+    });
     
 });
 
 async function generateAndStoreTicket() {
-    const newTicket = generateTickets(1)[0]; // Generate a single ticket
+    try {
+        const newTicket = generateTickets(1)[0]; // Generate a single ticket
 
-    // Your logic to store the new ticket in the database
-    await saveTicketToDatabase(newTicket);
+        console.log('Generated Ticket:', newTicket);
 
-    return newTicket;
+        // Your logic to store the new ticket in the database
+        await saveTicketToDatabase(newTicket);
+
+        console.log('Saved Ticket to Database:', newTicket);
+
+        return newTicket;
+    } catch (error) {
+        console.error('Error in generateAndStoreTicket:', error.message);
+        throw error;
+    }
 }
+
 
 async function saveTicketToDatabase(generatedTicket) {
     const client = new Client(pgConfig);
@@ -168,7 +204,6 @@ async function saveTicketToDatabase(generatedTicket) {
         await client.end();
     }
 }
-
 
 
 
@@ -369,30 +404,11 @@ app.delete('/deleteAllTickets', async (req, res) => {
 });
 
 async function saveVisitedNumberToDatabase(number) {
-    const client = new Client(pgConfig);
-
     try {
-        await client.connect();
-
-        // Ensure that the number is a valid integer
-        const validNumber = parseInt(number);
-
-        if (isNaN(validNumber)) {
-            throw new Error('Invalid input: Not a valid integer');
-        }
-
         // Insert the visited number into the database
-        const insertQuery = 'INSERT INTO visited_numbers (number) VALUES ($1)';
-        await client.query(insertQuery, [validNumber]);
-
-        // Emit a newVisitedNumber event to all clients
-        io.emit('newVisitedNumber', validNumber);
-
-        console.log('New visited number saved to the database:', validNumber);
+        await client.query('INSERT INTO visited_numbers (number) VALUES ($1)', [number]);
     } catch (error) {
-        console.error('Error saving new visited number to the database', error);
-    } finally {
-        await client.end();
+        console.error('Error saving visited number to the database:', error.message);
     }
 }
 

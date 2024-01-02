@@ -1,5 +1,6 @@
 const socket = io('https://tigerplayapp.onrender.com/');
 
+const displayedTicketNumbers = [];
 
 socket.on('tickets', (loadedTickets) => {
     // Update the UI with the loaded ticket data
@@ -38,6 +39,7 @@ function getZeroOne() {
 }
 
 function generateTicket() {
+    displayedTicketNumbers.length = 0;
     socket.emit('generateTicket');
     var columnok = false;
     rows = [];
@@ -150,29 +152,32 @@ function generateTicket() {
 
 function displayTicket(tickets) {
     tickets.forEach((ticket) => {
-        var tblstr = "<table>";
-        for (var r = 0; r < 3; r++) {
-            tblstr += "<tr>";
-            for (var c = 0; c < 9; c++) {
-                if (ticket['row' + (r + 1) + '_col' + (c + 1)] === 0) {
-                    tblstr += "<td>&nbsp;</td>";
-                } else {
-                    tblstr += "<td>" + ticket['row' + (r + 1) + '_col' + (c + 1)] + "</td>";
+        if (!displayedTicketNumbers.includes(ticket.ticket_number)) {
+            var tblstr = "<table>";
+            for (var r = 0; r < 3; r++) {
+                tblstr += "<tr>";
+                for (var c = 0; c < 9; c++) {
+                    if (ticket['row' + (r + 1) + '_col' + (c + 1)] === 0) {
+                        tblstr += "<td>&nbsp;</td>";
+                    } else {
+                        tblstr += "<td>" + ticket['row' + (r + 1) + '_col' + (c + 1)] + "</td>";
+                    }
                 }
+                tblstr += "</tr>";
             }
-            tblstr += "</tr>";
+            tblstr += "</table>";
+
+            // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
+            var buttonStr = "<button class='book-now'>Book Ticket " + ticket.ticket_number + "</button>";
+
+            // Append the new table and button to the existing content
+            $("#tbl").append(tblstr + buttonStr);
+
+            // Optionally, you can add margin between tables and buttons
+            $("#tbl table:not(:last-child)").css("margin-bottom", "20px");
+            $("#tbl button:not(:last-child)").css("margin-bottom", "20px");
+            displayedTicketNumbers.push(ticket.ticket_number);
         }
-        tblstr += "</table>";
-
-        // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
-        var buttonStr = "<button class='book-now'>Book Ticket " + ticket.ticket_number + "</button>";
-
-        // Append the new table and button to the existing content
-        $("#tbl").append(tblstr + buttonStr);
-
-        // Optionally, you can add margin between tables and buttons
-        $("#tbl table:not(:last-child)").css("margin-bottom", "20px");
-        $("#tbl button:not(:last-child)").css("margin-bottom", "20px");
     });
 }
 
@@ -190,7 +195,7 @@ adminButton.addEventListener('click', () => {
 const countdownElement = document.getElementById('countdown-display');
 
 function startCountdown(hours) {
-   
+
     socket.emit('startCountdown', hours);
 }
 
@@ -202,8 +207,20 @@ function updateCountdown(countdownValue) {
         countdownDisplay.textContent = formatTime(countdownValue);
 
         if (countdownValue < 0) {
+
+            fetch('http://tigerplayapp.onrender.com/clearVisitedNumbers', {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    // Handle the response as needed
+                })
+                .catch(error => {
+                    console.error('Error clearing visited numbers:', error);
+                });
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
-            window.location.href = 'Number-Generator/index.html';
+            window.open('Number-Generator/index.html', '_blank');
             countdownDisplay.textContent = 0;
         } else {
             setTimeout(() => {
@@ -250,20 +267,26 @@ socket.on('initialCountdown', (initialCountdownValue) => {
 
 socket.emit('getTickets');
 
+// const countdownBtn = document.getElementById('countdown-button');
+
+// countdownBtn.addEventListener('click', () => {
+//     socket.emit('startCountdown');
+// })
+
 
 function makeDeleteRequest() {
-    
+
     fetch('/deleteAllTickets', {
         method: 'DELETE',
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Tickets deleted successfully:', data);
-        // You can update the UI or perform other actions if needed
-    })
-    .catch(error => {
-        console.error('Error deleting tickets:', error);
-    });
+        .then(response => response.json())
+        .then(data => {
+            console.log('Tickets deleted successfully:', data);
+            // You can update the UI or perform other actions if needed
+        })
+        .catch(error => {
+            console.error('Error deleting tickets:', error);
+        });
 }
 
 // Function to handle the button click event
