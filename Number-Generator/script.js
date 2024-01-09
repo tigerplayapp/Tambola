@@ -131,16 +131,7 @@ function callGenerateRandomNumber() {
     generateRandomNumber();
 }
 
-<<<<<<< HEAD
 intervalId = setInterval(callGenerateRandomNumber, 1000);
-=======
-const intervalId = setInterval(callGenerateRandomNumber, 4000);
-
-setTimeout(() => {
-    callGenerateRandomNumber();
-    intervalId;
-}, 4000);
->>>>>>> ed15fe08a54cb60607b36d365c99eab4f5659f13
 
 
 //Display the tickets
