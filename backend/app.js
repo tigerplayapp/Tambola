@@ -164,9 +164,7 @@ io.on('connection', (socket) => {
         // Broadcast the new random number to all clients
         io.emit('newRandomNumber', newRandomNumber);
 
-        if (generatedNumbers.length === 90) {
-            io.emit('generatedNumbersCount90');
-        }
+       
     });
 
     socket.emit('initialState', {
@@ -348,22 +346,26 @@ app.post('/generateAndStoreTickets', (req, res) => {
 
 app.post('/clearVisitedNumbers', async (req, res) => {
     try {
-        // Replace this with your actual database deletion logic
+        // Replace this with your actual database deletion logic for visited numbers
         const client = new Client(pgConfig);
         await client.connect();
 
-        const deleteQuery = 'DELETE FROM visited_numbers';
-        await client.query(deleteQuery);
+        const deleteVisitedNumbersQuery = 'DELETE FROM visited_numbers';
+        await client.query(deleteVisitedNumbersQuery);
 
+        // Reset game state variables
+        generatedNumbers = [];
+        visitedNumbers = [];
         await client.end();
 
         // Placeholder response for demonstration purposes
-        res.json({ message: 'Visited numbers cleared successfully' });
+        res.json({ message: 'Visited numbers and game state cleared successfully' });
     } catch (error) {
         console.error('Error clearing visited numbers:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 
 async function generateTickets(numberOfTickets) {

@@ -37,11 +37,6 @@ function fetchVisitedNumbers() {
 const btn = document.getElementById('button');
 const displayNumbers = document.querySelector('.display-numbers');
 
-socket.on('generatedNumbersCount90', () => {
-    // If the count of generated numbers is 90, show the button
-    btn.style.display = 'block';
-});
-
 socket.on('initialState', (initialState) => {
     visitedNumbers = initialState.visitedNumbers;
     lastRandomNumber = initialState.lastRandomNumber;
@@ -115,13 +110,19 @@ function removeLast() {
     document.getElementById("n-" + visitedNumbers[lastnum]).classList.remove("last");
 }
 
+function resetGameVariables() {
+    gameIsActive = true;
+    gameOver = false;
+    lastRandomNumber = null;
+}
+
 btn.addEventListener('click', () => {
     console.log('button clicked');
-    clearInterval(intervalId); // Stop the interval
     window.location.href = '../index.html';
     deleteHighlightedCellsForTicket();
     clearVisitedNumbers();
-    
+    resetGameVariables(); // Reset game variables for the next game
+    intervalId = setInterval(callGenerateRandomNumber, 1000); // Restart the interval
 });
 
 function clearVisitedNumbers() {
@@ -140,10 +141,6 @@ function clearVisitedNumbers() {
 
 
 function callGenerateRandomNumber() {
-    if (gameOver) {
-        clearInterval(intervalId); // Stop the interval if the game is over
-        return;
-    }
     generateRandomNumber();
 }
 
@@ -274,6 +271,7 @@ function checkForWinner() {
                 displayWinnerMessage(ticketNumber);
                 isWinner = true;
                 gameIsActive = false; // Set the game to inactive
+                clearInterval(intervalId);
                 gameOver = true; // Set the game over flag to true
                 return false; // Exit the each loop
             }
