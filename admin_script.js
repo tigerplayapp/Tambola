@@ -17,7 +17,7 @@ function performLogin() {
     // Send a request to the server to validate the credentials
     $.ajax({
         type: 'POST',
-        url: 'http://localhost:3000/login',
+        url: 'https://tigerplayapp.onrender.com/login',
         contentType: 'application/json',
         data: JSON.stringify({ username, password }),
         success: function (response) {
