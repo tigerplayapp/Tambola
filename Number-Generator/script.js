@@ -123,12 +123,12 @@ function callGenerateRandomNumber() {
     generateRandomNumber();
 }
 
-const intervalId = setInterval(callGenerateRandomNumber, 1000);
+const intervalId = setInterval(callGenerateRandomNumber, 4000);
 
 setTimeout(() => {
     callGenerateRandomNumber();
     intervalId;
-}, 1000);
+}, 4000);
 
 
 //Display the tickets
