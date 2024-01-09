@@ -1,4 +1,4 @@
-const socket = io('https://tigerplayapp.onrender.com/');
+const socket = io('http://tigerplayapp.onrender.com');
 
 const displayedTicketNumbers = [];
 
@@ -15,6 +15,8 @@ socket.on('tickets', (loadedTickets) => {
 
 socket.on('generatedTicket', (generatedTicket) => {
     console.log('Received generated ticket:', generatedTicket);
+    generatedTicket.completionTime = null;
+    generatedTicket.highlightedCellCount = 0;
     displayTicket([generatedTicket]);
 });
 var rows = [];
@@ -196,10 +198,13 @@ const countdownElement = document.getElementById('countdown-display');
 
 function startCountdown(hours) {
 
+
     socket.emit('startCountdown', hours);
 }
 
 function updateCountdown(countdownValue) {
+
+
     const countdownDisplay = document.getElementById('countdown-display');
 
     // Check if the element exists before updating
@@ -207,6 +212,8 @@ function updateCountdown(countdownValue) {
         countdownDisplay.textContent = formatTime(countdownValue);
 
         if (countdownValue < 0) {
+
+
 
             fetch('http://tigerplayapp.onrender.com/clearVisitedNumbers', {
                 method: 'POST',
@@ -219,9 +226,30 @@ function updateCountdown(countdownValue) {
                 .catch(error => {
                     console.error('Error clearing visited numbers:', error);
                 });
+
+
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
             window.location.href = 'Number-Generator/index.html'
             countdownDisplay.textContent = 0;
+
+
+            fetch('http://tigerplayapp.onrender.com/clearVisitedNumbers', {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    // Handle the response as needed
+                })
+                .catch(error => {
+                    console.error('Error clearing visited numbers:', error);
+                });
+
+            document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
+            window.location.href = 'Number-Generator/index.html';
+            countdownDisplay.textContent = 0;
+
+
         } else {
             setTimeout(() => {
                 updateCountdown(countdownValue - 1);
@@ -230,6 +258,9 @@ function updateCountdown(countdownValue) {
     } else {
         console.error("Element with ID 'countdown-display' not found.");
     }
+
+
+
 }
 
 

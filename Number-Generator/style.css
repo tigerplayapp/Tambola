@@ -53,6 +53,7 @@ a{
     border: 2px solid coral;
 }
 
+
 .last {
     background-color: red !important;
     border: 2px solid red;
@@ -207,4 +208,73 @@ button.gen-btn-1 {
     margin-right: 10px;
     margin-bottom: 5px;
     padding: 10px;
+}
+
+
+
+
+.book-now {
+    margin: 10px;
+    font-size: 16px;
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    background: rgb(186, 15, 44);
+    box-shadow: 1px 1px 10px rgb(0, 0, 0);
+    text-shadow: 2px 2px 10px red;
+    
+    color: #fff;
+
+}
+
+
+
+/* Style for the ticket tables */
+#tbl table {
+    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-collapse: collapse;
+    margin-bottom: 20px; /* Optional: Add margin between tables */
+}
+
+/* Style for each table row */
+#tbl table tr {
+    background: #f0f0f0;
+}
+
+/* Style for each table cell */
+#tbl table td {
+    border: 2px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    width: 50px;
+    height: 50px;
+    transition: background-color 0.3s ease;
+    background-color: white; /* Set the cell background color to white */
+    color: black; /* Set the text color to black for numbers */
+}
+
+/* Style for the 'book-now' button */
+#tbl button {
+    margin-bottom: 20px; /* Optional: Add margin between buttons */
+}
+
+
+
+#winner-message {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50; /* Green color, you can customize the color */
+    padding: 10px;
+    background-color: #f0f8ff; /* Light blue color, you can customize the color */
+    border: 1px solid #4CAF50; /* Green border, you can customize the color */
+    margin-top: 20px;
+}
+
+.winner-text {
+    text-decoration: underline;
 }

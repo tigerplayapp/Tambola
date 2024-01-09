@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
-const { Client } = require('pg');
+const { Client, Pool } = require('pg');
 
 // Create an Express app, HTTP server, and Socket.IO instance
 const app = express();
@@ -20,6 +20,8 @@ const pgConfig = {
     port: 5432, // Adjust the port if needed
 };
 
+const pool = new Pool(pgConfig);
+
 const client = new Client(pgConfig);
 client.connect()
     .then(() => console.log('Connected to PostgreSQL'))
@@ -27,26 +29,30 @@ client.connect()
 
 // Initialize countdown value and tickets array
 let tickets = [];
+let countdownValue;
 let countdownInterval;
 let generatedNumbers = [];
 let userTicketCaches = {};
 let lastRandomNumber = null;
+let visitedNumbers = [];
 let MAX_NUMBERS = 90;
+let loadedTickets = [];
 
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('Client connected');
-
     const userId = socket.id;
     userTicketCaches[userId] = [];
+    
+    
     if (lastRandomNumber !== null) {
         socket.emit('newRandomNumber', lastRandomNumber);
     }
     socket.emit('existingGeneratedNumbers', generatedNumbers);
 
 
-     loadTicketsFromDatabase(userId)
+    loadTicketsFromDatabase(userId)
         .then((loadedTickets) => {
             socket.emit('ticketsGenerated', loadedTickets);
             console.log('Tickets loaded from the database and emitted to the client:', loadedTickets);
@@ -104,7 +110,7 @@ io.on('connection', (socket) => {
         io.emit('ticketsGenerated', [newTicket]);
     });
 
- 
+
 
 
 
@@ -121,17 +127,28 @@ io.on('connection', (socket) => {
         io.emit('newVisitedNumber', number);
     });
 
-    
+
     socket.on('generateTicket', () => {
         const newTicket = generateAndStoreTicket();
         io.emit('generatedTicket', newTicket);
     });
- 
-    socket.on('disconnect', () => {
-        // Remove the user-specific cache on disconnect
-        delete userTicketCaches[userId];
+
+
+
+
+    socket.on('connect', () => {
+        const userId = generateUserId(); // Implement your own logic to generate a unique user ID
+        socket.userId = userId; // Store the user ID in the socket object
     });
-    
+
+    // On disconnect, use the stored user ID
+    socket.on('disconnect', () => {
+        const userId = socket.userId;
+        if (userId) {
+            delete userTicketCaches[userId];
+        }
+    });
+
 
     socket.on('generateRandomNumber', async () => {
         let newRandomNumber;
@@ -151,8 +168,19 @@ io.on('connection', (socket) => {
             io.emit('generatedNumbersCount90');
         }
     });
-    
+
+    socket.emit('initialState', {
+        visitedNumbers: visitedNumbers,
+        lastRandomNumber: lastRandomNumber,
+        loadedTickets: loadedTickets,
+      
+    });
+
+
 });
+
+
+
 
 async function generateAndStoreTicket() {
     try {
@@ -220,7 +248,7 @@ async function loadTicketsFromDatabase(userId) {
 
         // Use the placeholders in the NOT IN condition
         const query = `SELECT * FROM tickets WHERE ticket_number NOT IN (${placeholders || 'null'})`;
-        
+
         // Combine the userCache and query parameters
         const queryParams = userCache.map(ticketNumber => parseInt(ticketNumber));
 
@@ -413,6 +441,67 @@ async function saveVisitedNumberToDatabase(number) {
 }
 
 
+app.get('/getTickets', (req, res) => {
+    try {
+        // Return the tickets array to the client
+        res.json({ tickets });
+    } catch (error) {
+        console.error('Error fetching tickets:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Assume you have an endpoint to fetch the state of highlighted cells
+app.get('/getHighlightedCells', async (req, res) => {
+    try {
+        // Fetch highlighted cells from the database or another storage mechanism
+        // Adjust the query based on your database schema
+        const result = await pool.query('SELECT ticket_number, cell_id FROM highlighted_cells');
+        const highlightedCells = result.rows;
+
+        res.json({ success: true, highlightedCells });
+    } catch (error) {
+        console.error('Error fetching highlighted cells:', error.message);
+        res.status(500).json({ success: false, error: 'Error fetching highlighted cells' });
+    }
+});
+
+// Endpoint to update the state when a cell is highlighted
+app.post('/saveHighlightedCell', async (req, res) => {
+    try {
+        const { ticket_number, cell_id } = req.body;
+
+        // Save the highlighted cell to the database
+        // Adjust the query based on your database schema
+        await pool.query('INSERT INTO highlighted_cells (ticket_number, cell_id) VALUES ($1, $2)', [ticket_number, cell_id]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error highlighting cell:', error.message);
+        res.status(500).json({ success: false, error: 'Error saving highlighted cell' });
+    }
+});
+
+// Endpoint to clear highlighted cells for a specific ticket
+app.post('/clearHighlightedCells', async (req, res) => {
+    try {
+        const { ticket_number } = req.body;
+
+        // Clear highlighted cells for the specified ticket from the database
+        // Adjust the query based on your database schema
+        await pool.query('DELETE FROM highlighted_cells WHERE ticket_number = $1', [ticket_number]);
+
+        res.json({ success: true, message: 'Highlighted cells cleared successfully' });
+    } catch (error) {
+        console.error('Error clearing highlighted cells:', error.message);
+        res.status(500).json({ success: false, error: 'Error clearing highlighted cells' });
+    }
+});
+
+
+function clearUserCache(userId) {
+    userTicketCaches[userId] = [];
+}
 
 
 // Define the port and start the server
