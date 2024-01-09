@@ -489,7 +489,7 @@ app.post('/clearHighlightedCells', async (req, res) => {
 
         // Clear highlighted cells for the specified ticket from the database
         // Adjust the query based on your database schema
-        await pool.query('DELETE FROM highlighted_cells WHERE ticket_number = $1', [ticket_number]);
+        await pool.query('DELETE FROM highlighted_cells');
 
         res.json({ success: true, message: 'Highlighted cells cleared successfully' });
     } catch (error) {
