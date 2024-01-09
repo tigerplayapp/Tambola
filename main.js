@@ -213,17 +213,7 @@ function updateCountdown(countdownValue) {
 
         if (countdownValue < 0) {
 
-            fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
-                method: 'POST',
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data.message);
-                    // Handle the response as needed
-                })
-                .catch(error => {
-                    console.error('Error clearing visited numbers:', error);
-                });
+            
 
             
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';

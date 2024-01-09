@@ -120,7 +120,23 @@ btn.addEventListener('click', () => {
     clearInterval(intervalId); // Stop the interval
     window.location.href = '../index.html';
     deleteHighlightedCellsForTicket();
+    clearVisitedNumbers();
+    
 });
+
+function clearVisitedNumbers() {
+    fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    // Handle the response as needed
+                })
+                .catch(error => {
+                    console.error('Error clearing visited numbers:', error);
+                });
+}
 
 
 function callGenerateRandomNumber() {
