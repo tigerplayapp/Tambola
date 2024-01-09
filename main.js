@@ -150,22 +150,6 @@ function generateTicket() {
         .catch(error => {
             console.error('Error generating and storing tickets:', error);
         });
-
-    fetch('http://tigerplayapp.onrender.com/clearHighlightedCells', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-            // Handle the response as needed
-        })
-        .catch(error => {
-            console.error('Error clearing highlighted cells:', error);
-        });
 }
 
 function displayTicket(tickets) {
@@ -213,14 +197,14 @@ adminButton.addEventListener('click', () => {
 const countdownElement = document.getElementById('countdown-display');
 
 function startCountdown(hours) {
-
+    
 
     socket.emit('startCountdown', hours);
 }
 
 function updateCountdown(countdownValue) {
-
-
+    
+    
     const countdownDisplay = document.getElementById('countdown-display');
 
     // Check if the element exists before updating
@@ -241,11 +225,10 @@ function updateCountdown(countdownValue) {
                     console.error('Error clearing visited numbers:', error);
                 });
 
+            
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
-            window.location.href = 'Number-Generator/index.html';
+            window.location.href = 'Number-Generator/index.html'
             countdownDisplay.textContent = 0;
-
-
         } else {
             setTimeout(() => {
                 updateCountdown(countdownValue - 1);
@@ -254,9 +237,6 @@ function updateCountdown(countdownValue) {
     } else {
         console.error("Element with ID 'countdown-display' not found.");
     }
-
-
-
 }
 
 

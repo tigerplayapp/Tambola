@@ -13,10 +13,10 @@ const io = socketIO(server);
 
 // PostgreSQL configuration
 const pgConfig = {
-    user: 'tigerplayapp_user',
-    host: 'dpg-cm9tcanqd2ns73drfdi0-a',
+    user: 'postgres',
+    host: 'localhost',
     database: 'tigerplayapp',
-    password: 'BNgDKxnEMyAxS7kvkcXfjp0EHXNdCilg',
+    password: 'Abdul@123',
     port: 5432, // Adjust the port if needed
 };
 
@@ -482,21 +482,21 @@ app.post('/saveHighlightedCell', async (req, res) => {
     }
 });
 
-// Endpoint to clear highlighted cells for a specific ticket
-app.post('/clearHighlightedCells', async (req, res) => {
+// Endpoint to delete highlighted cells for a specific ticket
+app.delete('/deleteHighlightedCells', async (req, res) => {
     try {
-        const { ticket_number } = req.body;
+        const ticketNumber = req.params.ticketNumber;
 
-        // Clear highlighted cells for the specified ticket from the database
-        // Adjust the query based on your database schema
+        // Delete highlighted cells from the database based on the ticket number
         await pool.query('DELETE FROM highlighted_cells');
 
-        res.json({ success: true, message: 'Highlighted cells cleared successfully' });
+        res.json({ success: true, message: 'Highlighted cells deleted successfully' });
     } catch (error) {
-        console.error('Error clearing highlighted cells:', error.message);
-        res.status(500).json({ success: false, error: 'Error clearing highlighted cells' });
+        console.error('Error deleting highlighted cells:', error.message);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
+
 
 
 function clearUserCache(userId) {

@@ -3,6 +3,8 @@ let visitedNumbers = [];
 let lastRandomNumber;
 let gameIsActive = true;
 let gameOver = false;
+
+let intervalId;
 const displayedTicketNumbers = new Set();
 
 socket.on('connect', () => {
@@ -45,8 +47,9 @@ socket.on('initialState', (initialState) => {
     lastRandomNumber = initialState.lastRandomNumber;
     displayVisitedNumbers(); // Update the UI with visited numbers
     updateDisplayedNumber(lastRandomNumber); // Update the UI with the last random number
-    // displayTicket(initialState.loadedTickets); // Update the UI with the loaded tickets
-    // Other relevant updates...
+
+
+  
 });
 
 
@@ -113,22 +116,22 @@ function removeLast() {
 }
 
 btn.addEventListener('click', () => {
-
     console.log('button clicked');
+    clearInterval(intervalId); // Stop the interval
     window.location.href = '../index.html';
-    clearInterval(intervalId);
+    deleteHighlightedCellsForTicket();
 });
 
+
 function callGenerateRandomNumber() {
+    if (gameOver) {
+        clearInterval(intervalId); // Stop the interval if the game is over
+        return;
+    }
     generateRandomNumber();
 }
 
-const intervalId = setInterval(callGenerateRandomNumber, 1000);
-
-setTimeout(() => {
-    callGenerateRandomNumber();
-    intervalId;
-}, 1000);
+intervalId = setInterval(callGenerateRandomNumber, 1000);
 
 
 //Display the tickets
@@ -282,6 +285,8 @@ function displayWinnerMessage(ticketNumber) {
     const winnerMessage = document.getElementById('winner-message');
     winnerMessage.innerHTML = `<span class="winner-text">Player with Ticket ${ticketNumber} has a full house and is the winner!</span>`;
     winnerMessage.style.display = 'block'; // Show the winner message element
+    btn.style.display = 'block';
+
 }
 
 
@@ -339,6 +344,26 @@ function applyHighlightedCells(highlightedCells) {
         console.error('Invalid highlightedCells data:', highlightedCells);
     }
 }
+
+
+// Function to delete highlighted cells for a specific ticket
+function deleteHighlightedCellsForTicket() {
+    fetch(`https://tigerplayapp.onrender.com/deleteHighlightedCells`, {
+        method: 'DELETE',
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Highlighted cells deleted successfully');
+            } else {
+                console.error('Error deleting highlighted cells:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting highlighted cells:', error);
+        });
+}
+
 
 socket.emit('getTickets');
 
