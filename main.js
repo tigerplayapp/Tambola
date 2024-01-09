@@ -150,6 +150,22 @@ function generateTicket() {
         .catch(error => {
             console.error('Error generating and storing tickets:', error);
         });
+
+    fetch('http://tigerplayapp.onrender.com/clearHighlightedCells', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+            // Handle the response as needed
+        })
+        .catch(error => {
+            console.error('Error clearing highlighted cells:', error);
+        });
 }
 
 function displayTicket(tickets) {
@@ -212,26 +228,6 @@ function updateCountdown(countdownValue) {
         countdownDisplay.textContent = formatTime(countdownValue);
 
         if (countdownValue < 0) {
-
-            fetch('http://tigerplayapp.onrender.com/clearHighlightedCells', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({}),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data.message);
-                // Handle the response as needed
-            })
-            .catch(error => {
-                console.error('Error clearing highlighted cells:', error);
-            });
-
-            
-          
-
 
             fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
                 method: 'POST',
