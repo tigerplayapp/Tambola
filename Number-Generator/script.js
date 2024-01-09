@@ -1,4 +1,4 @@
-const socket = io('http://tigerplayapp.onrender.com');
+const socket = io('https://tigerplayapp.onrender.com');
 let visitedNumbers = [];
 let lastRandomNumber;
 let gameIsActive = true;
@@ -14,7 +14,7 @@ socket.on('disconnect', () => {
 });
 
 function fetchVisitedNumbers() {
-    fetch('http://tigerplayapp.onrender.com/getVisitedNumbers')
+    fetch('https://tigerplayapp.onrender.com/getVisitedNumbers')
         .then(response => response.json())
         .then(data => {
             visitedNumbers = data.visitedNumbers || [];
@@ -85,7 +85,7 @@ socket.on('newRandomNumber', (randomNumber) => {
         lastRandomNumber = randomNumber;
 
         // Fetch loaded tickets here or use the appropriate data source
-        fetch('http://tigerplayapp.onrender.com/getTickets')
+        fetch('https://tigerplayapp.onrender.com/getTickets')
             .then(response => response.json())
             .then(data => {
                 const loadedTickets = data.loadedTickets || [];
@@ -288,7 +288,7 @@ function displayWinnerMessage(ticketNumber) {
 
 function saveHighlightedCellToDatabase(ticket_number, cell_id) {
     // Send a request to the server to save the highlighted cell
-    fetch('http://tigerplayapp.onrender.com/saveHighlightedCell', {
+    fetch('https://tigerplayapp.onrender.com/saveHighlightedCell', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -305,7 +305,7 @@ function saveHighlightedCellToDatabase(ticket_number, cell_id) {
 }
 
 function fetchHighlightedCells() {
-    fetch('http://tigerplayapp.onrender.com/getHighlightedCells')
+    fetch('https://tigerplayapp.onrender.com/getHighlightedCells')
         .then(response => response.json())
         .then(data => {
             const highlightedCells = data.highlightedCells || [];

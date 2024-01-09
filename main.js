@@ -1,4 +1,4 @@
-const socket = io('http://tigerplayapp.onrender.com');
+const socket = io('https://tigerplayapp.onrender.com');
 
 const displayedTicketNumbers = [];
 
@@ -215,7 +215,7 @@ function updateCountdown(countdownValue) {
 
 
 
-            fetch('http://tigerplayapp.onrender.com/clearVisitedNumbers', {
+            fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
                 method: 'POST',
             })
                 .then(response => response.json())
@@ -233,7 +233,7 @@ function updateCountdown(countdownValue) {
             countdownDisplay.textContent = 0;
 
 
-            fetch('http://tigerplayapp.onrender.com/clearVisitedNumbers', {
+            fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
                 method: 'POST',
             })
                 .then(response => response.json())
