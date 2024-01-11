@@ -37,6 +37,8 @@ let lastRandomNumber = null;
 let visitedNumbers = [];
 let MAX_NUMBERS = 90;
 let loadedTickets = [];
+let randomNumberLock = false;
+
 
 
 // Socket.IO connection handling
@@ -44,8 +46,8 @@ io.on('connection', (socket) => {
     console.log('Client connected');
     const userId = socket.id;
     userTicketCaches[userId] = [];
-    
-    
+
+
     if (lastRandomNumber !== null) {
         socket.emit('newRandomNumber', lastRandomNumber);
     }
@@ -151,29 +153,43 @@ io.on('connection', (socket) => {
 
 
     socket.on('generateRandomNumber', async () => {
-        let newRandomNumber;
-        do {
-            // Generate a new random number
-            newRandomNumber = Math.floor(Math.random() * MAX_NUMBERS + 1);
-        } while (generatedNumbers.includes(newRandomNumber));
+        if (!randomNumberLock) {
+            randomNumberLock = true;
 
-        // Add the new random number to the array
-        generatedNumbers.push(newRandomNumber);
-        await saveVisitedNumberToDatabase(newRandomNumber);
+            let newRandomNumber;
+            do {
+                // Generate a new random number
+                newRandomNumber = Math.floor(Math.random() * MAX_NUMBERS + 1);
+            } while (generatedNumbers.includes(newRandomNumber));
 
-        // Broadcast the new random number to all clients
-        io.emit('newRandomNumber', newRandomNumber);
+            // Add the new random number to the array
+            generatedNumbers.push(newRandomNumber);
+            await saveVisitedNumberToDatabase(newRandomNumber);
 
-       
+            // Broadcast the new random number to all clients
+            io.emit('newRandomNumber', newRandomNumber);
+
+            // Release the lock after broadcasting the random number
+            setTimeout(() => {
+                randomNumberLock = false;
+            }, 1000); // Adjust the timeout as needed
+        }
     });
 
     socket.emit('initialState', {
         visitedNumbers: visitedNumbers,
         lastRandomNumber: lastRandomNumber,
         loadedTickets: loadedTickets,
-      
+        // initialBookedTickets: initialBookedTickets,
+
+    });
+    socket.on('bookTicket', ({ ticketNumber, playerName }) => {
+        saveBookedTicketToDatabase(ticketNumber, playerName); console.log(`Booking ticket ${ticketNumber} for player ${playerName}`);
+        const bookedTicket = { ticket_number: ticketNumber, username: playerName };
+        io.emit('ticketBooked', bookedTicket);
     });
 
+    // socket.emit('initialBookedTickets', initialBookedTickets);
 
 });
 
@@ -499,11 +515,86 @@ app.delete('/deleteHighlightedCells', async (req, res) => {
     }
 });
 
+app.post('/bookTicket', async (req, res) => {
+    try {
+        const { ticketNumber, playerName } = req.body;
+
+        // Save the booked ticket information to the database
+        await saveBookedTicketToDatabase(ticketNumber, playerName);
+
+        // Broadcast the booked ticket information to all connected clients
+        const bookedTicket = { ticket_number: ticketNumber, username: playerName };
+        io.emit('ticketBooked', bookedTicket);
+
+        res.json({ message: 'Ticket booked successfully' });
+    } catch (error) {
+        console.error('Error booking ticket:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+async function saveBookedTicketToDatabase(ticketNumber, playerName) {
+    try {
+        const query = 'INSERT INTO booked_tickets (ticket_number, player_name) VALUES ($1, $2)';
+        await pool.query(query, [ticketNumber, playerName]);
+        io.emit('ticketBooked', { ticketNumber, playerName }); // Broadcast the booked ticket information
+    } catch (error) {
+        console.error('Error saving booked ticket to the database:', error.message);
+    }
+    io.emit('ticketBooked', { ticketNumber, playerName, isBooked: true });
+
+}
+
+// Load booked tickets from the database on server startup
+async function loadBookedTicketsFromDatabase() {
+    try {
+        const result = await pool.query('SELECT * FROM booked_tickets');
+        return result.rows;
+    } catch (error) {
+        console.error('Error loading booked tickets from the database:', error.message);
+        return [];
+    }
+}
+
+
+
+
+app.get('/getBookedTickets', async (req, res) => {
+    try {
+        // Fetch booked tickets from the database
+        const result = await pool.query('SELECT * FROM booked_tickets');
+        const bookedTickets = result.rows;
+
+        // Ensure that bookedTickets is an array
+        if (Array.isArray(bookedTickets)) {
+            res.json({ bookedTickets });
+        } else {
+            console.error('Error fetching booked tickets: Invalid data format');
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    } catch (error) {
+        console.error('Error fetching booked tickets:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.delete('/clearBookedTickets', async (req, res) => {
+    try {
+        // Implement logic to clear booked tickets in the database
+        await pool.query('DELETE FROM booked_tickets');
+
+        res.json({ message: 'Booked tickets cleared successfully' });
+    } catch (error) {
+        console.error('Error clearing booked tickets:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 
 function clearUserCache(userId) {
     userTicketCaches[userId] = [];
 }
+
 
 
 // Define the port and start the server

@@ -181,6 +181,10 @@ body.overlay-active button {
     display: none;
 }
 
+body.overlay-active #bookingControls {
+    display: none;
+}
+
 .overlay {
     display: flex;
     position: fixed;

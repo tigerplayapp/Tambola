@@ -144,7 +144,7 @@ function callGenerateRandomNumber() {
     generateRandomNumber();
 }
 
-intervalId = setInterval(callGenerateRandomNumber, 1000);
+intervalId = setInterval(callGenerateRandomNumber, 4000);
 
 
 //Display the tickets
@@ -196,19 +196,33 @@ function displayTicket(tickets) {
             tblstr += "</table>";
 
             // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
-            const buttonStr = "<button class='book-now'>Ticket " + ticket.ticket_number + "</button>";
+            const containerStr = "<div class='ticket-container'>" + tblstr;
+
+            // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
+            var buttonStr = `<button class='book-now' data-ticket="${ticket.ticket_number}">Book Ticket ${ticket.ticket_number}</button>`;
+
+            // Close the div container
+            const closingStr = "</div>";
 
             // Append the new table and button to the existing content
-            $("#tbl").append(tblstr + buttonStr);
+            $("#tbl").append(containerStr + buttonStr + closingStr);
 
             // Optionally, you can add margin between tables and buttons
             $("#tbl table:not(:last-child)").css("margin-bottom", "20px");
+            $("#tbl .ticket-container").css({
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+            });
+            
             $("#tbl button:not(:last-child)").css("margin-bottom", "20px");
 
             // Add the displayed ticket number to the set
             displayedTicketNumbers.add(currentTicketNumber);
         }
     });
+    updateWithBookedTickets();
 }
 
 function checkMatchingCells(randomNumber) {
@@ -388,3 +402,41 @@ window.onload = function () {
     callGenerateRandomNumber();
 
 } 
+
+function updateWithBookedTickets() {
+    fetch('/getBookedTickets')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched data:', data);  // Log the fetched data
+
+            const bookedTickets = data.bookedTickets;
+
+            if (Array.isArray(bookedTickets)) {
+                bookedTickets.forEach(bookedTicket => {
+                    const button = $(`button[data-ticket="${bookedTicket.ticket_number}"]`);
+                    if (button) {
+                        button.text(`Ticket ${bookedTicket.ticket_number} booked by ${bookedTicket.player_name}`);
+                    }
+                });
+            } else {
+                console.error('Error fetching booked tickets: Invalid data format');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching booked tickets:', error);
+        });
+}
+
+window.addEventListener('load', () => {
+    updateWithBookedTickets();
+});
+
+
+socket.on('ticketBooked', (bookedTicket) => {
+    console.log('New ticket booked:', bookedTicket);
+    const button = $(`button[data-ticket="${bookedTicket.ticketNumber}"]`);
+    if (button) {
+        button.text(`Ticket booked by ${bookedTicket.playerName}`);
+    }
+    updateWithBookedTickets();
+});

@@ -57,8 +57,20 @@
 
             <button onclick="deleteAllTickets()">Delete all tickets</button>
         </div>
+        <h2>Book Tickets</h2>
 
+        <div id="ticketNumberDropdown"></div>
 
+        <div id="bookingControls">
+            <!-- The dropdown menu for ticket numbers -->
+            <select id="selectedTicketDropdown"></select>
+    
+            <!-- Input field for entering the name -->
+            <input type="text" id="nameInput" placeholder="Enter your name">
+    
+            <!-- Button to trigger the booking process -->
+            <button onclick="bookTicket()">Book</button>
+        </div>
     </div>
 </body>
 

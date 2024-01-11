@@ -2,10 +2,11 @@ const socket = io('https://tigerplayapp.onrender.com');
 
 const displayedTicketNumbers = [];
 
+
 socket.on('tickets', (loadedTickets) => {
     // Update the UI with the loaded ticket data
     const ticketContainer = document.getElementById('ticket-container');
-
+    updateTicketDropdown(loadedTickets);
     // Render loaded tickets in the container
     displayTicket(loadedTickets);
     const latestTicketNumber = Math.max(...loadedTickets.map(ticket => ticket.ticket_number), 0);
@@ -18,7 +19,35 @@ socket.on('generatedTicket', (generatedTicket) => {
     generatedTicket.completionTime = null;
     generatedTicket.highlightedCellCount = 0;
     displayTicket([generatedTicket]);
+
 });
+
+
+
+
+
+function updateTicketDropdown(loadedTickets) {
+    const selectedTicketDropdown = document.getElementById('selectedTicketDropdown');
+
+    if (selectedTicketDropdown) {
+        // Clear existing options
+        selectedTicketDropdown.innerHTML = '';
+
+        // Add options for each loaded ticket
+        loadedTickets.forEach(ticket => {
+            const option = document.createElement('option');
+            option.value = ticket.ticket_number;
+            option.text = `Ticket ${ticket.ticket_number}`;
+            selectedTicketDropdown.add(option);
+        });
+    } else {
+        console.error('Dropdown element not found');
+    }
+}
+
+
+
+
 var rows = [];
 var ticket_number = 1;
 
@@ -151,7 +180,6 @@ function generateTicket() {
             console.error('Error generating and storing tickets:', error);
         });
 }
-
 function displayTicket(tickets) {
     tickets.forEach((ticket) => {
         if (!displayedTicketNumbers.includes(ticket.ticket_number)) {
@@ -169,8 +197,14 @@ function displayTicket(tickets) {
             }
             tblstr += "</table>";
 
-            // Create a button with the class 'book-now' and text 'Book Ticket {ticketNumber}'
-            var buttonStr = "<button class='book-now'>Book Ticket " + ticket.ticket_number + "</button>";
+            // const selectedTicketDropdown = document.getElementById('selectedTicketDropdown');
+            // const option = document.createElement('option');
+            // option.value = ticket.ticket_number;
+            // option.text = `Ticket ${ticket.ticket_number}`;
+            // selectedTicketDropdown.add(option);
+
+            // Use a data attribute to store the ticket number in the button
+            var buttonStr = `<button class='book-now' data-ticket="${ticket.ticket_number}">Book Ticket ${ticket.ticket_number}</button>`;
 
             // Append the new table and button to the existing content
             $("#tbl").append(tblstr + buttonStr);
@@ -178,10 +212,29 @@ function displayTicket(tickets) {
             // Optionally, you can add margin between tables and buttons
             $("#tbl table:not(:last-child)").css("margin-bottom", "20px");
             $("#tbl button:not(:last-child)").css("margin-bottom", "20px");
+
+            // Track the displayed ticket number
             displayedTicketNumbers.push(ticket.ticket_number);
+        // } else {
+        //     // If the ticket is already displayed, update the button text if it's booked
+        //     const button = $(`button[data-ticket="${ticket.ticket_number}"]`);
+        //     if (button && ticket.isBooked) {
+        //         button.text(`Ticket booked by ${ticket.bookedUsername}`);
+        //     }
         }
     });
+    updateUIWithBookedTickets();
+
+    $('.book-now').on('click', function () {
+        const ticketNumber = $(this).data('ticket');
+        const whatsappMessage = encodeURIComponent(`Hi, I want to book ticket ${ticketNumber}`);
+        const whatsappLink = `https://wa.me/your_whatsapp_number/?text=${whatsappMessage}`;
+    
+        // Open a new window or redirect to the WhatsApp link
+        window.open(whatsappLink, '_blank');
+    });
 }
+
 
 const adminButton = document.getElementById('admin-button');
 adminButton.addEventListener('click', () => {
@@ -190,21 +243,56 @@ adminButton.addEventListener('click', () => {
 
 
 
+function bookTicket() {
+    // Get the selected ticket number from the dropdown
+    const selectedTicketDropdown = document.getElementById('selectedTicketDropdown');
+    const selectedTicketNumber = parseInt(selectedTicketDropdown.value);
 
+    // Get the player's name from the input field
+    const playerNameInput = document.getElementById('nameInput');
+    const playerName = playerNameInput.value;
+
+    // Check if both the ticket number and player's name are valid
+    if (!isNaN(selectedTicketNumber) && playerName.trim() !== '') {
+        // Emit an event to the server to book the ticket
+        socket.emit('bookTicket', { ticketNumber: selectedTicketNumber, playerName });
+    } else {
+        alert('Please select a valid ticket and enter your name before booking.');
+    }
+    
+}
+
+
+function deleteHighlightedCellsForTicket() {
+    fetch(`https://tigerplayapp.onrender.com/deleteHighlightedCells`, {
+        method: 'DELETE',
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Highlighted cells deleted successfully');
+            } else {
+                console.error('Error deleting highlighted cells:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting highlighted cells:', error);
+        });
+}
 
 
 
 const countdownElement = document.getElementById('countdown-display');
 
 function startCountdown(hours) {
-    
+
 
     socket.emit('startCountdown', hours);
 }
 
 function updateCountdown(countdownValue) {
-    
-    
+
+
     const countdownDisplay = document.getElementById('countdown-display');
 
     // Check if the element exists before updating
@@ -212,6 +300,7 @@ function updateCountdown(countdownValue) {
         countdownDisplay.textContent = formatTime(countdownValue);
 
         if (countdownValue < 0) {
+            deleteHighlightedCellsForTicket();
 
             fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
                 method: 'POST',
@@ -225,7 +314,7 @@ function updateCountdown(countdownValue) {
                     console.error('Error clearing visited numbers:', error);
                 });
 
-            
+
             document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
             window.location.href = 'Number-Generator/index.html'
             countdownDisplay.textContent = 0;
@@ -282,6 +371,16 @@ socket.emit('getTickets');
 
 
 function makeDeleteRequest() {
+    fetch('/clearBookedTickets', {
+        method: 'DELETE',
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);  // Log the server response
+        })
+        .catch(error => {
+            console.error('Error clearing booked tickets:', error);
+        });
 
     fetch('/deleteAllTickets', {
         method: 'DELETE',
@@ -304,4 +403,55 @@ function deleteAllTickets() {
         // Call the server-side function to delete all tickets
         makeDeleteRequest();
     }
+
+    
 }
+
+// Wrap the code that updates the UI inside a function
+function updateUIWithBookedTickets() {
+    fetch('/getBookedTickets')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched data:', data);  // Log the fetched data
+
+            const bookedTickets = data.bookedTickets;
+
+            if (Array.isArray(bookedTickets)) {
+                bookedTickets.forEach(bookedTicket => {
+                    const button = $(`button[data-ticket="${bookedTicket.ticket_number}"]`);
+                    if (button) {
+                        button.text(`Ticket booked by ${bookedTicket.player_name}`);
+                    }
+                });
+            } else {
+                console.error('Error fetching booked tickets: Invalid data format');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching booked tickets:', error);
+        });
+}
+
+
+// Call the function on page load
+window.addEventListener('load', () => {
+    updateUIWithBookedTickets();
+});
+
+// Also, call the function after the socket receives the 'ticketBooked' event
+socket.on('ticketBooked', (bookedTicket) => {
+    console.log('New ticket booked:', bookedTicket);
+    const button = $(`button[data-ticket="${bookedTicket.ticketNumber}"]`);
+    if (button) {
+        button.text(`Ticket booked by ${bookedTicket.playerName}`);
+    }
+    updateUIWithBookedTickets();
+});
+
+const whatsappIcon = document.getElementById('whatsapp-icon');
+
+whatsappIcon.addEventListener('click', () => {
+    let phoneNumber = '8099291048';
+    window.open('https://wa.me/' + phoneNumber, '_blank');
+})
+
