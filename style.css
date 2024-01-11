@@ -163,7 +163,6 @@ body {
     align-items: center;
     border-collapse: collapse;
     max-width: 100%;
-    overflow-x: auto;
 }
 
 tr {
