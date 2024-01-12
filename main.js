@@ -228,7 +228,7 @@ function displayTicket(tickets) {
     $('.book-now').on('click', function () {
         const ticketNumber = $(this).data('ticket');
         const whatsappMessage = encodeURIComponent(`Hi, I want to book ticket ${ticketNumber}`);
-        const whatsappLink = `https://wa.me/your_whatsapp_number/?text=${whatsappMessage}`;
+        const whatsappLink = `https://wa.me/+918099291048/?text=${whatsappMessage}`;
     
         // Open a new window or redirect to the WhatsApp link
         window.open(whatsappLink, '_blank');
@@ -451,7 +451,7 @@ socket.on('ticketBooked', (bookedTicket) => {
 const whatsappIcon = document.getElementById('whatsapp-icon');
 
 whatsappIcon.addEventListener('click', () => {
-    let phoneNumber = '8099291048';
+    let phoneNumber = '+918099291048';
     window.open('https://wa.me/' + phoneNumber, '_blank');
 })
 
