@@ -17,7 +17,7 @@ body {
 
     min-width: 100%;
     min-height: 100vh;
-    margin: 20px;
+    margin: 20px auto;
 }
 
 .container {
@@ -154,6 +154,30 @@ body {
         padding: 12px;
         margin-bottom: 20px;
     }
+    .bannerImg {
+        width: 100%; /* Adjust the width to 100% for smaller screens */
+        margin-left: 0; /* Remove left margin to center the image */
+        border-radius: 0; /* Remove border radius or adjust as needed */
+    }
+    .whatsapp,
+    .telegram,
+    .call-now,
+    .admin {
+        width: 100%; /* Set width to 100% for smaller screens */
+        border-radius: 50%; /* Adjust border-radius as needed */
+        margin: 10px 5px; /* Adjust margin as needed for spacing */
+    }
+
+    @media screen and (max-width: 767px) {
+        .table {
+            font-size: 16px; /* Adjust font size for smaller screens */
+        }
+    
+        td {
+            width: 50%; /* Adjust width for small screens */
+        }
+    }
+
 }
 
 .table {
@@ -171,7 +195,7 @@ tr {
 
 td {
     border: 2px solid #ddd;
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     width: 50px; /* Set a fixed width for the cells */
     height: 50px; /* Set a fixed height for the cells */

@@ -1,4 +1,4 @@
-const socket = io('https://tigerplayapp.onrender.com');
+const socket = io('http://localhost:3000');
 
 const displayedTicketNumbers = [];
 
@@ -215,12 +215,12 @@ function displayTicket(tickets) {
 
             // Track the displayed ticket number
             displayedTicketNumbers.push(ticket.ticket_number);
-        // } else {
-        //     // If the ticket is already displayed, update the button text if it's booked
-        //     const button = $(`button[data-ticket="${ticket.ticket_number}"]`);
-        //     if (button && ticket.isBooked) {
-        //         button.text(`Ticket booked by ${ticket.bookedUsername}`);
-        //     }
+            // } else {
+            //     // If the ticket is already displayed, update the button text if it's booked
+            //     const button = $(`button[data-ticket="${ticket.ticket_number}"]`);
+            //     if (button && ticket.isBooked) {
+            //         button.text(`Ticket booked by ${ticket.bookedUsername}`);
+            //     }
         }
     });
     updateUIWithBookedTickets();
@@ -229,7 +229,7 @@ function displayTicket(tickets) {
         const ticketNumber = $(this).data('ticket');
         const whatsappMessage = encodeURIComponent(`Hi, I want to book ticket ${ticketNumber}`);
         const whatsappLink = `https://wa.me/+918099291048/?text=${whatsappMessage}`;
-    
+
         // Open a new window or redirect to the WhatsApp link
         window.open(whatsappLink, '_blank');
     });
@@ -259,12 +259,12 @@ function bookTicket() {
     } else {
         alert('Please select a valid ticket and enter your name before booking.');
     }
-    
+
 }
 
 
 function deleteHighlightedCellsForTicket() {
-    fetch(`https://tigerplayapp.onrender.com/deleteHighlightedCells`, {
+    fetch(`http://localhost:3000/deleteHighlightedCells`, {
         method: 'DELETE',
     })
         .then(response => response.json())
@@ -302,7 +302,7 @@ function updateCountdown(countdownValue) {
         if (countdownValue < 0) {
             deleteHighlightedCellsForTicket();
 
-            fetch('https://tigerplayapp.onrender.com/clearVisitedNumbers', {
+            fetch('http://localhost:3000/clearVisitedNumbers', {
                 method: 'POST',
             })
                 .then(response => response.json())
@@ -315,7 +315,8 @@ function updateCountdown(countdownValue) {
                 });
 
 
-            document.querySelector('.timer').innerHTML = '<p>Game has started!</p>';
+            document.querySelector('.timer').innerHTML = '<p>Game has started! <a href="Number-Generator/index.html">Click here</a></p>';
+
             window.location.href = 'Number-Generator/index.html'
             countdownDisplay.textContent = 0;
         } else {
@@ -404,7 +405,7 @@ function deleteAllTickets() {
         makeDeleteRequest();
     }
 
-    
+
 }
 
 // Wrap the code that updates the UI inside a function

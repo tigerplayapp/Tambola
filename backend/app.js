@@ -13,12 +13,13 @@ const io = socketIO(server);
 
 // PostgreSQL configuration
 const pgConfig = {
-    user: 'tigerplayapp_user',
-    host: 'dpg-cm9tcanqd2ns73drfdi0-a',
+    user: 'postgres',
+    host: 'localhost',
     database: 'tigerplayapp',
-    password: 'BNgDKxnEMyAxS7kvkcXfjp0EHXNdCilg',
+    password: 'Abdul@123',
     port: 5432, // Adjust the port if needed
 };
+
 
 const pool = new Pool(pgConfig);
 
